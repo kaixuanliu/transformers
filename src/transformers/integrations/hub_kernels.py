@@ -59,6 +59,13 @@ try:
                     # revision="pure-layer-test",
                 )
             },
+            "xpu": {
+                Mode.INFERENCE: LayerRepository(
+                    repo_id="kernels-community/liger_kernels",
+                    layer_name="LigerRMSNorm",
+                    # revision="pure-layer-test",
+                )
+            },
         },
         "MLP": {
             "cuda": LayerRepository(
