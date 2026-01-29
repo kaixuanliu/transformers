@@ -227,6 +227,8 @@ class LightOnOcrForConditionalGenerationModelTest(ModelTesterMixin, GenerationTe
     pipeline_model_mapping = {"image-text-to-text": LightOnOcrForConditionalGeneration} if is_torch_available() else {}
     # LightOnOcr uses a PixtralVisionModel, which merges batch_size and num_patches in index 1, with index 0 hardcoded to 1
     skip_test_image_features_output_shape = True
+    # Pixtral vision encoder uses dynamic slicing, which is incompatible with torch.export's requirement
+    test_torch_exportable = False
 
     _is_composite = True
 
