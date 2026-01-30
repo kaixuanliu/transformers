@@ -190,5 +190,10 @@ class LlavaOnevisionConfig(PreTrainedConfig):
 
         super().__init__(**kwargs)
 
+        # Due to a mismatch at model addition-time, the `tie_word_embeddings` was saved in the text config, even
+        # though it concerns the main model, while it was set to False by default in the main model... So we hardcode a fix here
+        self.tie_word_embeddings = self.tie_word_embeddings or self.text_config.tie_word_embeddings
+        self.text_config.tie_word_embeddings = False
+
 
 __all__ = ["LlavaOnevisionConfig"]
