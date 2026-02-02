@@ -373,7 +373,6 @@ def get_tensor_shard(param, empty_param, device_mesh, rank, dim, tensor_idx: int
         rank (int): Global rank of the current process/device.
         dim (int): Dimension along which to shard the tensor.
     """
-
     param_dim = empty_param.ndim
     # Flatten the mesh to get the total number of devices
     mesh_shape = device_mesh.shape
