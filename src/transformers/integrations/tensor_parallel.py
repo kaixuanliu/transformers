@@ -374,13 +374,6 @@ def get_tensor_shard(param, empty_param, device_mesh, rank, dim, tensor_idx: int
         dim (int): Dimension along which to shard the tensor.
     """
 
-    # Helper function to get shape consistently whether param is a Tensor or has get_shape() method
-    def _get_shape(tensor):
-        if isinstance(tensor, torch.Tensor):
-            return tensor.shape
-        else:
-            return tensor.get_shape()
-
     param_dim = empty_param.ndim
     # Flatten the mesh to get the total number of devices
     mesh_shape = device_mesh.shape
