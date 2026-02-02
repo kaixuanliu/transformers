@@ -212,9 +212,6 @@ class LlavaOnevisionForConditionalGenerationModelTest(ModelTesterMixin, Generati
     test_cpu_offload = False
     test_disk_offload_safetensors = False
     test_disk_offload_bin = False
-    test_torch_exportable = (
-        False  # uses data-dependent control flow with image_sizes, not compatible with torch.export
-    )
     _is_composite = True
 
     def setUp(self):
