@@ -112,6 +112,10 @@ class ImageTextToTextPipelineTests(unittest.TestCase):
                     "rocm",
                     (9, 4),
                 ): "Hugging Face, a company of minds\nWith tools and services that make our lives easier\nFrom natural language processing\nTo machine learning and more, they do it all\n\nThey help us to create and share\nContent that is both true and true\nAnd make the world a better place\nWith their tools and services, we can do it all\n\nFrom image and video to text and speech\nThey make it all possible\nWith their tools and services, we can do it all\nAnd make the world a better place\n\nSo let us embrace and use\nHugging Face's tools and services\nTo create and share\nContent that is true and true\nAnd make the world a better place.",
+                (
+                    "xpu",
+                    3,
+                ): "Hugging Face, a company of minds\nWith tools and services that make our lives easier\nFrom natural language processing\nTo machine learning and more, they do it all\n\nThey help us to create and share\nContent that's both engaging and informative\nWith their tools, we can write\nAnd create stories that are both true and true\n\nThey help us to analyze\nAnd make sense of data that's hard to see\nWith their tools, we can see\nAnd make sense of the world around us\n\nThey help us to create\nAnd share content that's both true and true\nWith their tools, we can see\nAnd make sense of the world around us\n\nSo here's to Hugging Face, a company of minds\nWith tools and services that make our lives easier\nFrom natural language processing\nTo machine learning and more, they do it all\n\nThank you, Hugging Face, for all you do\nWith tools and services that make our lives easier\nSo here's to you, and all the great things you do",
             }
         ).get_expectation()
         self.assertEqual(
