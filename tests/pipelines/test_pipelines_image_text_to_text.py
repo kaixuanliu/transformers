@@ -178,6 +178,10 @@ class ImageTextToTextPipelineTests(unittest.TestCase):
                     "rocm",
                     (9, 4),
                 ): "<image> What this is? Assistant: This is a photo of two cats lying on a pink blanket. The cats are facing the camera, and they appear to be sleeping or resting. The blanket is placed on a couch, and the cats are positioned in such a way that they are facing the camera. The image captures a peaceful moment between the two cats, and it's a great way to showcase their cuteness and relaxed demeanor.",
+                (
+                    "xpu",
+                    3,
+                ): "<image> What this is? Assistant: This is a photo of two cats lying on a pink blanket. The cats are facing the camera, and they appear to be sleeping or resting. The blanket is placed on a surface that looks like a couch or a chair, and it is covered with a soft fabric. The cats' fur is a mix of black, white, and brown, and they have a variety of patterns on their bodies. The image captures a moment of tranquility and companionship between the cats.",
             }
         ).get_expectation()
         self.assertEqual(
@@ -201,6 +205,10 @@ class ImageTextToTextPipelineTests(unittest.TestCase):
                     "rocm",
                     (9, 4),
                 ): "<image> What this is? Assistant: This is a photo of two cats lying on a pink blanket. The cats are facing the camera, and they appear to be sleeping or resting. The blanket is placed on a couch, and the overall setting is cozy and comfortable.",
+                (
+                    "xpu",
+                    3,
+                ): "<image> What this is? Assistant: This is a photo of two cats lying on a pink blanket. The cats are facing the camera, and they appear to be sleeping or resting. The blanket is placed on a surface that looks like a couch or a chair, and it is covered with a soft fabric. The overall setting is cozy and comfortable, perfect for a relaxing moment with the cats.",
             }
         ).get_expectation()
         self.assertEqual(
@@ -262,6 +270,7 @@ class ImageTextToTextPipelineTests(unittest.TestCase):
             {
                 ("rocm", (9, 4)): "The first image shows a statue of the Statue of",
                 ("cuda", 8): "The first image shows a statue of Liberty in the",
+                ("xpu", 3): "The first image shows a statue of Liberty in the",
             }
         ).get_expectation()
 
