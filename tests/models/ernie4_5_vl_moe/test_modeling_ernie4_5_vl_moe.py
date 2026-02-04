@@ -543,6 +543,15 @@ class Ernie4_5_VL_MoeSmallIntegrationTest(unittest.TestCase):
     def setUp(self):
         cleanup(torch_device, gc_collect=True)
 
+        # Enable deterministic algorithms for reproducibility
+        torch.use_deterministic_algorithms(True, warn_only=True)
+        # Set seeds for all random number generators
+        import random
+        import numpy as np
+        random.seed(42)
+        np.random.seed(42)
+        torch.manual_seed(42)
+
         self.processor = AutoProcessor.from_pretrained(self.model_id)
         self.message = [
             {

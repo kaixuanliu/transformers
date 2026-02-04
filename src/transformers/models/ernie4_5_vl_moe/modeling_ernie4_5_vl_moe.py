@@ -362,7 +362,7 @@ class Ernie4_5_VL_MoeMoeTopKRouter(nn.Module):
         with maybe_autocast(device_type=device_type, enabled=False):  # Force float32
             router_logits = F.linear(hidden_states.float(), self.weight.float())
             routing_weights = F.softmax(router_logits, dim=1, dtype=torch.float)
-            _, selected_experts = torch.topk(self.moe_statics(routing_weights), self.top_k, dim=-1)
+            _, selected_experts = torch.topk(self.moe_statics(routing_weights), self.top_k, dim=-1, sorted=True)
             routing_weights = torch.gather(routing_weights, dim=-1, index=selected_experts)
             routing_weights = routing_weights / torch.clamp(
                 routing_weights.sum(dim=-1, keepdim=True), min=self.norm_min
@@ -1542,7 +1542,7 @@ def load_balancing_loss_func(
 
     routing_weights = torch.nn.functional.softmax(concatenated_gate_logits, dim=-1)
 
-    _, selected_experts = torch.topk(routing_weights, top_k, dim=-1)
+    _, selected_experts = torch.topk(routing_weights, top_k, dim=-1, sorted=True)
 
     expert_mask = torch.nn.functional.one_hot(selected_experts, num_experts)
 
