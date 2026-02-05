@@ -620,6 +620,7 @@ class Ernie4_5_VL_MoeSmallIntegrationTest(unittest.TestCase):
     def test_small_model_integration_test_batch(self):
         model = self.load_model("auto")
         batch_messages = [self.message] * 2
+        self.processor.tokenizer.padding_side = "left"
         inputs = self.processor.apply_chat_template(
             batch_messages, tokenize=True, add_generation_prompt=True, return_dict=True, return_tensors="pt"
         ).to(torch_device)
@@ -632,7 +633,7 @@ class Ernie4_5_VL_MoeSmallIntegrationTest(unittest.TestCase):
 
         EXPECTED_DECODED_TEXT = [
             '知道了知道了attaatta不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如',
-            '不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊',
+            '填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空',
         ]  # fmt: skip
 
         self.assertEqual(
@@ -709,6 +710,7 @@ class Ernie4_5_VL_MoeSmallIntegrationTest(unittest.TestCase):
             {"role": "user", "content": [{"type": "text", "text": "Who are you?"}]},
         ]
         batched_messages = [self.message, message_wo_image]
+        self.processor.tokenizer.padding_side = "left"
         inputs = self.processor.apply_chat_template(
             batched_messages,
             tokenize=True,
@@ -740,6 +742,7 @@ class Ernie4_5_VL_MoeSmallIntegrationTest(unittest.TestCase):
     def test_small_model_integration_test_batch_different_resolutions(self):
         model = self.load_model("auto")
         batched_messages = [self.message, self.message2]
+        self.processor.tokenizer.padding_side = "left"
         inputs = self.processor.apply_chat_template(
             batched_messages,
             tokenize=True,
