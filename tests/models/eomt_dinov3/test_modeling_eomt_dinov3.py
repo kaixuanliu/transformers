@@ -277,11 +277,6 @@ class EomtDinov3ForUniversalSegmentationIntegrationTest(unittest.TestCase):
         # fmt: off
         class_expectations = Expectations(
             {
-                (None, None): [
-                    [-0.3262, -5.6875, -0.7539],
-                    [ 0.0474, -6.8438, -2.1406],
-                    [-1.4219, -6.0312, -5.4688]
-                ],
                 ("xpu", 3): [
                     [-0.3125, -5.6562, -0.7148],
                     [ 0.0693, -6.8125, -2.1562],
@@ -296,11 +291,6 @@ class EomtDinov3ForUniversalSegmentationIntegrationTest(unittest.TestCase):
         )
         masks_expectations = Expectations(
             {
-                (None, None): [
-                    [-1.5859, -1.1250, -0.9883],
-                    [ 2.5781,  5.3438,  6.2188],
-                    [ 3.7656,  7.1562,  8.1875]
-                ],
                 ("xpu", 3): [
                     [-1.5859, -1.1406, -1.0156],
                     [ 2.5938,  5.3125,  6.1875],
