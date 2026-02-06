@@ -1737,7 +1737,7 @@ class ProcessorMixin(PushToHubMixin):
                     continue
                 new_content = []
                 for content in message["content"]:
-                    if content.get("type") == "image_url" and "image_url" in content:
+                    if isinstance(content, dict) and content.get("type") == "image_url" and "image_url" in content:
                         image_url_info = content["image_url"]
                         url = image_url_info.get("url", "") if isinstance(image_url_info, dict) else image_url_info
                         new_content.append({"type": "image", "url": url})
