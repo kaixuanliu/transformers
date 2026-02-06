@@ -272,7 +272,7 @@ class ImageTextToTextPipelineTests(unittest.TestCase):
             {
                 ("rocm", (9, 4)): "The first image shows a statue of the Statue of",
                 ("cuda", 8): "The first image shows a statue of Liberty in the",
-                ("xpu", 3): "The first image shows a statue of Liberty in the"
+                ("xpu", 3): "The first image shows a statue of Liberty in the",
             }
         ).get_expectation()
 
