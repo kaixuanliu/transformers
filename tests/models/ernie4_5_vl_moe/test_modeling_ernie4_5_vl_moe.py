@@ -25,6 +25,7 @@ from transformers import (
     is_vision_available,
 )
 from transformers.testing_utils import (
+    Expectations,
     cleanup,
     require_deterministic_for_xpu,
     require_torch,
@@ -630,10 +631,21 @@ class Ernie4_5_VL_MoeSmallIntegrationTest(unittest.TestCase):
         # it should not matter whether two images are the same size or not
         output = model.generate(**inputs, max_new_tokens=30)
 
-        EXPECTED_DECODED_TEXT = [
-            '知道了知道了attaatta不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如',
-            '不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊',
-        ]  # fmt: skip
+        # fmt: off
+        expectations = Expectations(
+            {
+                ("xpu", None): [
+                    '知道了知道了attaatta不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如',
+                    '填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空',
+                ],
+                (None, None): [
+                    '知道了知道了attaatta不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如',
+                    '不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊',
+                ],
+            }
+        )
+        EXPECTED_DECODED_TEXT = expectations.get_expectation()
+        # fmt: on
 
         self.assertEqual(
             [
