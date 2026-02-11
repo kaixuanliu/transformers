@@ -297,7 +297,7 @@ class Ernie4_5_VL_MoeModelTest(ModelTesterMixin, GenerationTesterMixin, unittest
 
 
 @slow
-@require_torch_large_accelerator(memory=64)  # Tested on A100
+@require_torch_large_accelerator(memory=64)  # Tested on A100 / torch 2.9.0
 @require_torch
 class Ernie4_5_VL_MoeIntegrationTest(unittest.TestCase):
     model = None
@@ -456,8 +456,8 @@ class Ernie4_5_VL_MoeIntegrationTest(unittest.TestCase):
         output = model.generate(**inputs, max_new_tokens=30, do_sample=False, num_beams=2, num_return_sequences=2)
 
         EXPECTED_DECODED_TEXT = [
-            'The animal in the image is a lynx, not a dog. It has the distinctive features of a lynx, including a short tail',
-            'The animal in the image is a lynx, not a dog. It has the distinctive features of a lynx, such as its short'
+            'The animal in the image is a lynx, not a dog. It has the distinctive features of a lynx, such as tuft',
+            'The animal in the image is a lynx, not a dog. It has the distinctive features of a lynx, including a short tail'
         ]  # fmt: skip
 
         self.assertEqual(
@@ -490,7 +490,7 @@ class Ernie4_5_VL_MoeIntegrationTest(unittest.TestCase):
         output = model.generate(**inputs, max_new_tokens=30)
 
         EXPECTED_DECODED_TEXT = [
-            "The animal in the image is a lynx, not a dog. It's a wild cat species known for its distinctive ear tufts and",
+            "The animal in the image is a lynx. It's a medium-sized wild cat characterized by its distinctive facial ruff, short tail",
             "I am an AI assistant designed to help answer questions, provide information, and assist with tasks. I don't have personal experiences or a physical form"
         ]  # fmt: skip
 
@@ -620,7 +620,6 @@ class Ernie4_5_VL_MoeSmallIntegrationTest(unittest.TestCase):
     def test_small_model_integration_test_batch(self):
         model = self.load_model("auto")
         batch_messages = [self.message] * 2
-        self.processor.tokenizer.padding_side = "left"
         inputs = self.processor.apply_chat_template(
             batch_messages, tokenize=True, add_generation_prompt=True, return_dict=True, return_tensors="pt"
         ).to(torch_device)
@@ -633,7 +632,7 @@ class Ernie4_5_VL_MoeSmallIntegrationTest(unittest.TestCase):
 
         EXPECTED_DECODED_TEXT = [
             '知道了知道了attaatta不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如不如',
-            '填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空填空',
+            '不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊不是啊',
         ]  # fmt: skip
 
         self.assertEqual(
@@ -710,7 +709,6 @@ class Ernie4_5_VL_MoeSmallIntegrationTest(unittest.TestCase):
             {"role": "user", "content": [{"type": "text", "text": "Who are you?"}]},
         ]
         batched_messages = [self.message, message_wo_image]
-        self.processor.tokenizer.padding_side = "left"
         inputs = self.processor.apply_chat_template(
             batched_messages,
             tokenize=True,
@@ -742,7 +740,6 @@ class Ernie4_5_VL_MoeSmallIntegrationTest(unittest.TestCase):
     def test_small_model_integration_test_batch_different_resolutions(self):
         model = self.load_model("auto")
         batched_messages = [self.message, self.message2]
-        self.processor.tokenizer.padding_side = "left"
         inputs = self.processor.apply_chat_template(
             batched_messages,
             tokenize=True,
