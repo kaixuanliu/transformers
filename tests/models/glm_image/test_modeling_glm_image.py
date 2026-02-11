@@ -31,6 +31,7 @@ from transformers.models.auto.modeling_auto import MODEL_MAPPING_NAMES
 from transformers.testing_utils import (
     Expectations,
     cleanup,
+    require_deterministic_for_xpu,
     require_flash_attn,
     require_torch,
     require_torch_accelerator,
@@ -580,6 +581,7 @@ class GlmImageIntegrationTest(unittest.TestCase):
             f"Expected first 30 tokens:\n{expected_tokens.tolist()}\nGot:\n{generated_tokens[:30].tolist()}",
         )
 
+    @require_deterministic_for_xpu
     def test_image_to_image_generation(self):
         """Test image-to-image generation produces valid image tokens."""
         model = self.get_model()
@@ -602,7 +604,7 @@ class GlmImageIntegrationTest(unittest.TestCase):
         expected_tokens = Expectations(
             {
                 ("cuda", None): [9223, 11045, 5705, 14581, 4759, 11667, 1275, 10094, 572, 10543, 9223, 1275, 9223, 10543, 12265, 10543, 2007, 8200, 10543, 1153, 1153, 1153, 10094, 16304, 9223, 11045, 3114, 14581, 4759, 10094],
-                ("xpu", 3): [9223, 11045, 11045, 14581, 4759, 11667, 10543, 572, 1275, 1275, 9223, 1275, 9223, 3114, 9223, 10543, 1143, 4759, 4759, 1153, 1153, 1153, 8932, 9223, 10094, 11045, 11045, 14581, 4759, 10094],
+                ("xpu", 3): [9223, 11045, 11045, 14581, 4759, 11667, 10543, 10094, 572, 10543, 9223, 1275, 9223, 9223, 4759, 10543, 2007, 4759, 10543, 1153, 1153, 1153, 8932, 9223, 10094, 11045, 5705, 14581, 4759, 10094],
             }
         )
         # fmt: on
