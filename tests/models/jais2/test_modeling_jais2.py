@@ -92,18 +92,26 @@ class Jais2IntegrationTest(unittest.TestCase):
             logits = model(dummy_input, attention_mask=attention_mask).logits
         logits = logits.float()
 
-        EXPECTED_LOGITS_BATCH0 = [-0.9751, -1.0918, -0.9600, -0.9526, -0.9600, -0.9551, -0.9624, -0.9644, -0.9644, -0.9600, -0.9561, -0.9658, -0.9585, -0.9688, -0.9663]  # fmt: skip
-        EXPECTED_LOGITS_BATCH1 = [-1.5361, -1.6328, -1.5283, -1.5225, -1.5293, -1.5244, -1.5322, -1.5332, -1.5332, -1.5293, -1.5254, -1.5352, -1.5273, -1.5381, -1.5361]  # fmt: skip
+        # fmt: off
+        EXPECTED_LOGITS_BATCH0 = {
+            "cuda": [-0.9751, -1.0918, -0.9600, -0.9526, -0.9600, -0.9551, -0.9624, -0.9644, -0.9644, -0.9600, -0.9561, -0.9658, -0.9585, -0.9688, -0.9663],
+            "xpu": [-0.9634, -1.0820, -0.9482, -0.9409, -0.9482, -0.9429, -0.9507, -0.9526, -0.9526, -0.9482, -0.9443, -0.9541, -0.9468, -0.9570, -0.9546],
+        }
+        EXPECTED_LOGITS_BATCH1 = {
+            "cuda": [-1.5361, -1.6328, -1.5283, -1.5225, -1.5293, -1.5244, -1.5322, -1.5332, -1.5332, -1.5293, -1.5254, -1.5352, -1.5273, -1.5381, -1.5361],
+            "xpu": [-1.5283, -1.6270, -1.5215, -1.5146, -1.5215, -1.5166, -1.5254, -1.5254, -1.5264, -1.5215, -1.5186, -1.5273, -1.5205, -1.5303, -1.5283],
+        }
+        # fmt: on
 
         torch.testing.assert_close(
             logits[0, -1, :15],
-            torch.tensor(EXPECTED_LOGITS_BATCH0, device=torch_device),
+            torch.tensor(EXPECTED_LOGITS_BATCH0[torch_device], device=torch_device),
             rtol=1e-3,
             atol=1e-3,
         )
         torch.testing.assert_close(
             logits[1, -1, :15],
-            torch.tensor(EXPECTED_LOGITS_BATCH1, device=torch_device),
+            torch.tensor(EXPECTED_LOGITS_BATCH1[torch_device], device=torch_device),
             rtol=1e-3,
             atol=1e-3,
         )
