@@ -75,7 +75,6 @@ class Jais2ModelTest(CausalLMModelTest, unittest.TestCase):
 
 @slow
 @require_torch_accelerator
-@require_deterministic_for_xpu
 class Jais2IntegrationTest(unittest.TestCase):
     def setUp(self):
         cleanup(torch_device, gc_collect=True)
@@ -83,6 +82,7 @@ class Jais2IntegrationTest(unittest.TestCase):
     def tearDown(self):
         cleanup(torch_device, gc_collect=True)
 
+    @require_deterministic_for_xpu
     def test_model_logits(self):
         model_id = "inceptionai/Jais-2-8B-Chat"
         dummy_input = torch.LongTensor([[0, 0, 0, 0, 0, 0, 1, 2, 3], [1, 1, 2, 3, 4, 5, 6, 7, 8]]).to(torch_device)
