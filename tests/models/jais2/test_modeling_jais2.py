@@ -18,6 +18,7 @@ import unittest
 from transformers import AutoTokenizer, is_torch_available
 from transformers.testing_utils import (
     cleanup,
+    require_deterministic_for_xpu,
     require_torch,
     require_torch_accelerator,
     slow,
@@ -74,6 +75,7 @@ class Jais2ModelTest(CausalLMModelTest, unittest.TestCase):
 
 @slow
 @require_torch_accelerator
+@require_deterministic_for_xpu
 class Jais2IntegrationTest(unittest.TestCase):
     def setUp(self):
         cleanup(torch_device, gc_collect=True)
