@@ -17,6 +17,7 @@ import unittest
 
 from transformers import AutoTokenizer, is_torch_available
 from transformers.testing_utils import (
+    Expectations,
     cleanup,
     require_deterministic_for_xpu,
     require_torch,
@@ -95,25 +96,29 @@ class Jais2IntegrationTest(unittest.TestCase):
         logits = logits.float()
 
         # fmt: off
-        EXPECTED_LOGITS_BATCH0 = {
-            "cuda": [-0.9751, -1.0918, -0.9600, -0.9526, -0.9600, -0.9551, -0.9624, -0.9644, -0.9644, -0.9600, -0.9561, -0.9658, -0.9585, -0.9688, -0.9663],
-            "xpu": [-0.9692, -1.0859, -0.9541, -0.9468, -0.9546, -0.9492, -0.9570, -0.9585, -0.9585, -0.9541, -0.9507, -0.9604, -0.9526, -0.9634, -0.9609],
-        }
-        EXPECTED_LOGITS_BATCH1 = {
-            "cuda": [-1.5361, -1.6328, -1.5283, -1.5225, -1.5293, -1.5244, -1.5322, -1.5332, -1.5332, -1.5293, -1.5254, -1.5352, -1.5273, -1.5381, -1.5361],
-            "xpu": [-1.5342, -1.6318, -1.5264, -1.5205, -1.5273, -1.5225, -1.5303, -1.5312, -1.5312, -1.5273, -1.5234, -1.5332, -1.5254, -1.5361, -1.5342],
-        }
+        expected_logits_batch0 = Expectations(
+            {
+                ("cuda", None): [-0.9751, -1.0918, -0.9600, -0.9526, -0.9600, -0.9551, -0.9624, -0.9644, -0.9644, -0.9600, -0.9561, -0.9658, -0.9585, -0.9688, -0.9663],
+                ("xpu", 3): [-0.9692, -1.0859, -0.9541, -0.9468, -0.9546, -0.9492, -0.9570, -0.9585, -0.9585, -0.9541, -0.9507, -0.9604, -0.9526, -0.9634, -0.9609],
+            }
+        )
+        expected_logits_batch1 = Expectations(
+            {
+                ("cuda", None): [-1.5361, -1.6328, -1.5283, -1.5225, -1.5293, -1.5244, -1.5322, -1.5332, -1.5332, -1.5293, -1.5254, -1.5352, -1.5273, -1.5381, -1.5361],
+                ("xpu", 3): [-1.5342, -1.6318, -1.5264, -1.5205, -1.5273, -1.5225, -1.5303, -1.5312, -1.5312, -1.5273, -1.5234, -1.5332, -1.5254, -1.5361, -1.5342],
+            }
+        )
         # fmt: on
 
         torch.testing.assert_close(
             logits[0, -1, :15],
-            torch.tensor(EXPECTED_LOGITS_BATCH0[torch_device], device=torch_device),
+            torch.tensor(expected_logits_batch0.get_expectation(), device=torch_device),
             rtol=1e-3,
             atol=1e-3,
         )
         torch.testing.assert_close(
             logits[1, -1, :15],
-            torch.tensor(EXPECTED_LOGITS_BATCH1[torch_device], device=torch_device),
+            torch.tensor(expected_logits_batch1.get_expectation(), device=torch_device),
             rtol=1e-3,
             atol=1e-3,
         )
