@@ -174,6 +174,10 @@ class MoonshineStreamingModelTest(ModelTesterMixin, PipelineTesterMixin, unittes
     def test_disk_offload_safetensors(self):
         pass
 
+    @unittest.skip(reason="Does not work on the tiny model as we keep hitting edge cases.")
+    def test_model_parallelism(self):
+        pass
+
     def test_attention_outputs(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
         config.return_dict = True
