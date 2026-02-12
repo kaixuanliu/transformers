@@ -22,6 +22,7 @@ from transformers import (
     is_torch_available,
 )
 from transformers.testing_utils import (
+    Expectations,
     cleanup,
     require_flash_attn,
     require_torch,
@@ -90,12 +91,28 @@ class ExaoneMoeIntegrationTest(unittest.TestCase):
         with torch.no_grad():
             out = model(input_ids).logits.float().cpu()
 
-        EXPECTED_MEAN = torch.tensor(
-            [[-2.2491, -3.0824, -3.2191, -3.2712, -3.1991, -3.4087, -3.1384, -3.2601, -3.8869, -0.6940]]
-        )
-        EXPECTED_SLICE = torch.tensor(
-            [-2.3906, -3.0469,  2.6875, -3.0156,  0.4941, -1.4219, -1.8672, -2.6719, -1.7656, -2.0938]
-        )
+        # fmt: off
+        EXPECTED_MEAN = Expectations(
+            {
+                ("xpu", None): torch.tensor(
+                    [[-2.2315, -3.0070, -3.2105, -3.2688, -3.2211, -3.3958, -3.1049, -3.2591, -3.8714, -0.6801]]
+                ),
+                ("cuda", None): torch.tensor(
+                    [[-2.2491, -3.0824, -3.2191, -3.2712, -3.1991, -3.4087, -3.1384, -3.2601, -3.8869, -0.6940]]
+                ),
+            }
+        ).get_expectation()
+        EXPECTED_SLICE = Expectations(
+            {
+                ("xpu", None): torch.tensor(
+                    [-2.3750, -3.0156, 2.6875, -3.0000, 0.5078, -1.4141, -1.8516, -2.6719, -1.7578, -2.0781]
+                ),
+                ("cuda", None): torch.tensor(
+                    [-2.3906, -3.0469, 2.6875, -3.0156, 0.4941, -1.4219, -1.8672, -2.6719, -1.7656, -2.0938]
+                ),
+            }
+        ).get_expectation()
+        # fmt: on
         torch.testing.assert_close(out.mean(-1), EXPECTED_MEAN, atol=1e-2, rtol=1e-2)
         torch.testing.assert_close(out[0, 0, :10], EXPECTED_SLICE, atol=1e-4, rtol=1e-4)
 
