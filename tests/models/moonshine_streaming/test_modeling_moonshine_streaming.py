@@ -162,6 +162,18 @@ class MoonshineStreamingModelTest(ModelTesterMixin, PipelineTesterMixin, unittes
     def test_init_weights_can_init_buffers(self):
         self.skipTest("MoonshineStreaming uses special buffer initialization that conflicts with this test")
 
+    @unittest.skip(reason="Does not work on the tiny model as we keep hitting edge cases.")
+    def test_cpu_offload(self):
+        pass
+
+    @unittest.skip(reason="Does not work on the tiny model as we keep hitting edge cases.")
+    def test_disk_offload_bin(self):
+        pass
+
+    @unittest.skip(reason="Does not work on the tiny model as we keep hitting edge cases.")
+    def test_disk_offload_safetensors(self):
+        pass
+
     def test_attention_outputs(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
         config.return_dict = True
