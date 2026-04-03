@@ -189,8 +189,9 @@ def _grouped_mm_fallback(input: torch.Tensor, weight: torch.Tensor, offs: torch.
     # single cpu<->gpu sync point here,
     # avoids multiple syncs inside the loop
     for i, end in enumerate(offs.tolist()):
-        if start == end:
-            continue
+        # Note: we intentionally avoid `if start == end: continue` here because
+        # such data-dependent conditionals break torch.compile with fullgraph=True.
+        # torch.mm with empty slices (when start == end) is a valid no-op.
         torch.mm(input[start:end], weight[i], out=output[start:end])
         start = end
 
@@ -218,28 +219,61 @@ def _grouped_mm_fallback_setup_context(ctx, inputs, output):
     ctx.offs = inputs[2]
 
 
-def _grouped_mm_fallback_backward(ctx, grad_output):
-    """Backward pass for `_grouped_mm_fallback`. Computes grad_input and grad_weight per expert group; offs has no gradient."""
-    input, weight = ctx.saved_tensors
-    grad_input = torch.zeros_like(input)
-    grad_weight = torch.zeros_like(weight)
-
+def _grouped_mm_backward_input(grad_output: torch.Tensor, weight: torch.Tensor, offs: torch.Tensor) -> torch.Tensor:
+    """Compute gradient w.r.t. input for grouped_mm_fallback. Wrapped as a custom op to be opaque to torch.compile."""
+    grad_input = torch.zeros(grad_output.size(0), weight.size(1), device=grad_output.device, dtype=grad_output.dtype)
     start = 0
-    # single cpu<->gpu sync point here,
-    # avoids multiple syncs inside the loop
-    for i, end in enumerate(ctx.offs.tolist()):
-        if start == end:
-            continue
+    for i, end in enumerate(offs.tolist()):
         torch.mm(grad_output[start:end], weight[i].T, out=grad_input[start:end])
+        start = end
+    return grad_input
+
+
+def _grouped_mm_backward_input_fake(
+    grad_output: torch.Tensor, weight: torch.Tensor, offs: torch.Tensor
+) -> torch.Tensor:
+    """Shape/dtype inference stub for _grouped_mm_backward_input."""
+    return torch.empty(grad_output.size(0), weight.size(1), device=grad_output.device, dtype=grad_output.dtype)
+
+
+def _grouped_mm_backward_weight(input: torch.Tensor, grad_output: torch.Tensor, offs: torch.Tensor) -> torch.Tensor:
+    """Compute gradient w.r.t. weight for grouped_mm_fallback. Wrapped as a custom op to be opaque to torch.compile."""
+    num_experts = offs.size(0)
+    grad_weight = torch.zeros(num_experts, input.size(1), grad_output.size(1), device=input.device, dtype=input.dtype)
+    start = 0
+    for i, end in enumerate(offs.tolist()):
         torch.mm(input[start:end].T, grad_output[start:end], out=grad_weight[i])
         start = end
+    return grad_weight
 
+
+def _grouped_mm_backward_weight_fake(
+    input: torch.Tensor, grad_output: torch.Tensor, offs: torch.Tensor
+) -> torch.Tensor:
+    """Shape/dtype inference stub for _grouped_mm_backward_weight."""
+    num_experts = offs.size(0)
+    return torch.empty(num_experts, input.size(1), grad_output.size(1), device=input.device, dtype=input.dtype)
+
+
+def _grouped_mm_fallback_backward(ctx, grad_output):
+    """Backward pass for `_grouped_mm_fallback`. Uses custom ops to be opaque to torch.compile."""
+    input, weight = ctx.saved_tensors
+    grad_input = torch.ops.transformers.grouped_mm_backward_input(grad_output, weight, ctx.offs)
+    grad_weight = torch.ops.transformers.grouped_mm_backward_weight(input, grad_output, ctx.offs)
     return grad_input, grad_weight, None
 
 
 if is_torch_available():
     torch.library.custom_op("transformers::grouped_mm_fallback", _grouped_mm_fallback, mutates_args=())
     torch.library.register_fake("transformers::grouped_mm_fallback", _grouped_mm_fallback_fake)
+
+    # Register backward helper ops as custom ops to make them opaque to torch.compile
+    torch.library.custom_op("transformers::grouped_mm_backward_input", _grouped_mm_backward_input, mutates_args=())
+    torch.library.register_fake("transformers::grouped_mm_backward_input", _grouped_mm_backward_input_fake)
+
+    torch.library.custom_op("transformers::grouped_mm_backward_weight", _grouped_mm_backward_weight, mutates_args=())
+    torch.library.register_fake("transformers::grouped_mm_backward_weight", _grouped_mm_backward_weight_fake)
+
     torch.library.register_autograd(
         "transformers::grouped_mm_fallback",
         _grouped_mm_fallback_backward,

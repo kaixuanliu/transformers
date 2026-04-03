@@ -121,6 +121,10 @@ class Gemma4TextModelTest(CausalLMModelTest, unittest.TestCase):
     def test_sdpa_padding_matches_padding_free_with_position_ids(self):
         pass
 
+    @unittest.skipIf(torch_device == "xpu", reason="XPU does not have a flash attention kernel for SDPA")
+    def test_sdpa_can_dispatch_on_flash(self):
+        super().test_sdpa_can_dispatch_on_flash()
+
 
 class Gemma4Audio2TextModelTester:
     def __init__(
@@ -265,6 +269,11 @@ class Gemma4Audio2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittes
     def test_generate_from_random_inputs_embeds(self):
         pass
 
+    def test_sdpa_can_dispatch_on_flash(self):
+        if torch_device == "xpu":
+            self.skipTest(reason="XPU does not have a flash attention kernel for SDPA")
+        super().test_sdpa_can_dispatch_on_flash()
+
 
 class Gemma4Vision2TextModelTester:
     def __init__(
@@ -378,7 +387,7 @@ class Gemma4Vision2TextModelTester:
 class Gemma4Vision2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
     all_model_classes = (Gemma4Model, Gemma4ForConditionalGeneration) if is_torch_available() else ()
     all_generative_model_classes = (Gemma4ForConditionalGeneration,) if is_torch_available() else ()
-    additional_model_inputs = ["mm_token_type_ids"]
+    additional_model_inputs = ["mm_token_type_ids", "image_position_ids"]
 
     def setUp(self):
         self.model_tester = Gemma4Vision2TextModelTester(self)
@@ -417,6 +426,15 @@ class Gemma4Vision2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unitte
     @unittest.skip("Gemma4 needs correct embeddings for per-layer-input computation, random won't work!")
     def test_generate_from_random_inputs_embeds(self):
         pass
+
+    @require_deterministic_for_xpu
+    def test_flash_attn_2_inference_equivalence_right_padding(self):
+        if torch_device == "xpu":
+            self.skipTest(reason="Flash attention on XPU produces numerically different results")
+        super().test_flash_attn_2_inference_equivalence_right_padding()
+
+    def test_sdpa_can_dispatch_on_flash(self):
+        self.skipTest(reason="XPU does not have a flash attention kernel for SDPA")
 
 
 @unittest.skip("Integration Tests are not up-to-date yet! TODO Cyril: update me pretty pretty please!")

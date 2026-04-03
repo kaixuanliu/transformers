@@ -1799,11 +1799,13 @@ class Gemma4AudioModel(Gemma4PreTrainedModel):
 
         self.post_init()
 
-    def _convert_4d_mask_to_blocked_5d(self, mask_4d: torch.Tensor) -> torch.Tensor:
+    def _convert_4d_mask_to_blocked_5d(self, mask_4d: torch.Tensor | None) -> torch.Tensor | None:
         """
         Convert a standard 4D attention mask `[batch_size, 1, seq_len, seq_len]` to the 5D blocked format
         `[batch_size, 1, num_blocks, chunk_size, context_size]` expected by the chunked local attention,
         """
+        if mask_4d is None:
+            return None
         batch_size, _, seq_len, _ = mask_4d.shape
         device = mask_4d.device
 
@@ -1887,18 +1889,25 @@ class Gemma4VisionModel(Gemma4PreTrainedModel):
     def forward(
         self,
         pixel_values: torch.FloatTensor,
-        pixel_position_ids: torch.LongTensor,
+        pixel_position_ids: torch.LongTensor | None = None,
         **kwargs: Unpack[TransformersKwargs],
     ) -> BaseModelOutputWithPast:
         r"""
         pixel_values (`torch.FloatTensor` or `list[torch.FloatTensor]`):
             The images to encode. Either a single `[batch, channels, height, width]` tensor
             (all images same size) or a list of `[1, channels, height, width]` tensors (different sizes).
-        pixel_position_ids (`torch.LongTensor` of shape `(batch_size, max_patches, 2)`):
+        pixel_position_ids (`torch.LongTensor` of shape `(batch_size, max_patches, 2)`, *optional*):
             The patch positions as (x, y) coordinates in the image. Padding patches are indicated by (-1, -1).
+            If not provided, default sequential position IDs are generated with no padding.
         """
         pooling_kernel_size = self.config.pooling_kernel_size
         output_length = pixel_values.shape[-2] // (pooling_kernel_size * pooling_kernel_size)
+
+        # Generate default position IDs if not provided (assumes no padding)
+        if pixel_position_ids is None:
+            batch_size, num_patches = pixel_values.shape[:2]
+            # Create default position IDs with zeros (valid index, no padding)
+            pixel_position_ids = torch.zeros(batch_size, num_patches, 2, device=pixel_values.device, dtype=torch.long)
 
         padding_positions = (pixel_position_ids == -1).all(dim=-1)
         inputs_embeds = self.patch_embedder(pixel_values, pixel_position_ids, padding_positions)
