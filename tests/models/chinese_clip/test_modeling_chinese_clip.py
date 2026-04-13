@@ -16,6 +16,7 @@
 import inspect
 import unittest
 
+import pytest
 import requests
 from parameterized import parameterized
 
@@ -393,6 +394,17 @@ class ChineseCLIPTextModelTest(ModelTesterMixin, unittest.TestCase):
     def test_training_gradient_checkpointing_use_reentrant_true(self):
         pass
 
+    def test_model_parallelism(self):
+        if torch_device == "xpu":
+            self.skipTest(reason="SDPA attention mask device mismatch when model is split across multiple XPUs")
+        super().test_model_parallelism()
+
+    @pytest.mark.torch_compile_test
+    def test_sdpa_can_compile_dynamic(self):
+        if torch_device == "xpu":
+            self.skipTest(reason="Triton compilation fails on Intel XPU with ZE_RESULT_ERROR_MODULE_BUILD_FAILURE")
+        super().test_sdpa_can_compile_dynamic()
+
 
 @require_torch
 class ChineseCLIPVisionModelTest(ModelTesterMixin, unittest.TestCase):
@@ -554,6 +566,12 @@ class ChineseCLIPModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestC
     @unittest.skip(reason="ChineseCLIPModel does not have input/output embeddings")
     def test_model_get_set_embeddings(self):
         pass
+
+    @pytest.mark.torch_compile_test
+    def test_sdpa_can_compile_dynamic(self):
+        if torch_device == "xpu":
+            self.skipTest(reason="Triton compilation fails on Intel XPU with ZE_RESULT_ERROR_MODULE_BUILD_FAILURE")
+        super().test_sdpa_can_compile_dynamic()
 
     @slow
     def test_model_from_pretrained(self):
