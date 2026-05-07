@@ -4958,6 +4958,10 @@ def caching_allocator_warmup(model: PreTrainedModel, expanded_device_map: dict, 
 
     # This will kick off the caching allocator to avoid having to Malloc afterwards
     for device, byte_count in total_byte_count.items():
+        if device.type == "xpu":
+            # XPU allocators can fail on single giant warmup allocations even when enough
+            # memory is reported as free. Let regular parameter loading grow the cache.
+            continue
         if device.type in ["cuda", "xpu"]:
             accelerator_module = getattr(torch, device.type)
             index = device.index if device.index is not None else accelerator_module.current_device()
@@ -4990,7 +4994,7 @@ def caching_allocator_warmup(model: PreTrainedModel, expanded_device_map: dict, 
             # to OOM. See https://github.com/huggingface/transformers/issues/37436#issuecomment-2808982161 for more details.
             # Note that we use an absolute value instead of device proportion here, as a 8GiB device could still allocate too much
             # if using e.g. 90% of device size, while a 140GiB device would allocate too little
-            byte_count = min(byte_count, total_device_memory - 1.2 * 1024**3)
+            byte_count = min(byte_count, total_device_memory - 1.2 * 1024**3, free_device_memory)
         # We divide by 2 here as we allocate in fp16
         _ = torch.empty(int(byte_count // 2), dtype=torch.float16, device=device, requires_grad=False)
 

@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import shutil
+import tempfile
 import unittest
 
 from parameterized import parameterized
@@ -256,14 +258,30 @@ class DeepseekV4IntegrationTest(unittest.TestCase):
         quantization_config = FineGrainedFP8Config(dequantize=True)
         config = AutoConfig.from_pretrained(self.model_id)
         tokenizer = AutoTokenizer.from_pretrained(self.model_id)
-        model = AutoModelForCausalLM.from_pretrained(
-            self.model_id,
-            config=config,
-            dtype="auto",
-            device_map="auto",
-            attn_implementation="eager",
-            quantization_config=quantization_config,
-        )
+        max_memory = None
+        offload_folder = None
+        if torch.xpu.is_available():
+            gib = 1024**3
+            max_memory = {}
+            for device_idx in range(torch.xpu.device_count()):
+                free_memory, _ = torch.xpu.mem_get_info(device_idx)
+                # Leave headroom for temporary dequantization buffers.
+                max_memory[device_idx] = f"{max(int((free_memory - 2 * gib) // gib), 1)}GiB"
+            offload_folder = tempfile.mkdtemp(prefix="deepseek_v4_offload_")
+        try:
+            model = AutoModelForCausalLM.from_pretrained(
+                self.model_id,
+                config=config,
+                dtype="auto",
+                device_map="auto",
+                max_memory=max_memory,
+                offload_folder=offload_folder,
+                attn_implementation="eager",
+                quantization_config=quantization_config,
+            )
+        finally:
+            if offload_folder is not None:
+                shutil.rmtree(offload_folder, ignore_errors=True)
 
         inputs = tokenizer(self.prompt, return_tensors="pt").to(model.device)
         with torch.no_grad():

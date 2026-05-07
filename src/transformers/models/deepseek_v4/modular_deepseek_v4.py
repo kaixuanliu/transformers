@@ -336,7 +336,11 @@ class DeepseekV4HCACompressor(nn.Module):
         layer_idx: int,
     ) -> torch.Tensor:
         batch, _, _ = hidden_states.shape
-        cache_layer: DeepseekV4HCACache = past_key_values.layers[layer_idx] if past_key_values is not None else None
+        cache_layer: DeepseekV4HCACache | None = None
+        if past_key_values is not None:
+            layer = past_key_values.layers[layer_idx]
+            if hasattr(layer, "store_compression_weights") and hasattr(layer, "update_compressor_states"):
+                cache_layer = layer
         kv = self.kv_proj(hidden_states)
         gate = self.gate_proj(hidden_states)
         if cache_layer is None:
@@ -422,7 +426,14 @@ class DeepseekV4Indexer(nn.Module):
         layer_idx: int,
     ) -> torch.LongTensor:
         batch, seq_len, _ = hidden_states.shape
-        cache_layer: DeepseekV4CSACache = past_key_values.layers[layer_idx] if past_key_values is not None else None
+        cache_layer: DeepseekV4CSACache | None = None
+        if past_key_values is not None:
+            layer = past_key_values.layers[layer_idx]
+            if all(
+                hasattr(layer, method)
+                for method in ("store_compression_weights", "update_compressor_states", "update_overlap_state")
+            ):
+                cache_layer = layer
         kv = self.kv_proj(hidden_states)
         gate = self.gate_proj(hidden_states)
 
@@ -523,7 +534,14 @@ class DeepseekV4CSACompressor(nn.Module):
         layer_idx: int,
     ) -> torch.Tensor:
         batch, seq_len, _ = hidden_states.shape
-        cache_layer: DeepseekV4CSACache = past_key_values.layers[layer_idx] if past_key_values is not None else None
+        cache_layer: DeepseekV4CSACache | None = None
+        if past_key_values is not None:
+            layer = past_key_values.layers[layer_idx]
+            if all(
+                hasattr(layer, method)
+                for method in ("store_compression_weights", "update_compressor_states", "update_overlap_state")
+            ):
+                cache_layer = layer
         kv = self.kv_proj(hidden_states)
         gate = self.gate_proj(hidden_states)
 
