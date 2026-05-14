@@ -336,7 +336,8 @@ class DeepseekV4HCACompressor(nn.Module):
         layer_idx: int,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         batch, _, _ = hidden_states.shape
-        cache_layer: DeepseekV4HCACache = past_key_values.layers[layer_idx] if past_key_values is not None else None
+        _raw_layer = past_key_values.layers[layer_idx] if past_key_values is not None else None
+        cache_layer: DeepseekV4HCACache = _raw_layer if isinstance(_raw_layer, DeepseekV4HCACache) else None
         kv = self.kv_proj(hidden_states)
         gate = self.gate_proj(hidden_states)
         if cache_layer is None:
@@ -437,7 +438,8 @@ class DeepseekV4Indexer(nn.Module):
         layer_idx: int,
     ) -> torch.LongTensor:
         batch, seq_len, _ = hidden_states.shape
-        cache_layer: DeepseekV4CSACache = past_key_values.layers[layer_idx] if past_key_values is not None else None
+        _raw_layer = past_key_values.layers[layer_idx] if past_key_values is not None else None
+        cache_layer: DeepseekV4CSACache = _raw_layer if isinstance(_raw_layer, DeepseekV4CSACache) else None
         kv = self.kv_proj(hidden_states)
         gate = self.gate_proj(hidden_states)
 
@@ -555,7 +557,8 @@ class DeepseekV4CSACompressor(nn.Module):
         layer_idx: int,
     ) -> torch.Tensor:
         batch, seq_len, _ = hidden_states.shape
-        cache_layer: DeepseekV4CSACache = past_key_values.layers[layer_idx] if past_key_values is not None else None
+        _raw_layer = past_key_values.layers[layer_idx] if past_key_values is not None else None
+        cache_layer: DeepseekV4CSACache = _raw_layer if isinstance(_raw_layer, DeepseekV4CSACache) else None
         kv = self.kv_proj(hidden_states)
         gate = self.gate_proj(hidden_states)
 

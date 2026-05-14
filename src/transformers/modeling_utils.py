@@ -5026,7 +5026,14 @@ def caching_allocator_warmup(model: PreTrainedModel, expanded_device_map: dict, 
             # if using e.g. 90% of device size, while a 140GiB device would allocate too little
             byte_count = min(byte_count, total_device_memory - 1.2 * 1024**3)
         # We divide by 2 here as we allocate in fp16
-        _ = torch.empty(int(byte_count // 2), dtype=torch.float16, device=device, requires_grad=False)
+        try:
+            _ = torch.empty(int(byte_count // 2), dtype=torch.float16, device=device, requires_grad=False)
+        except Exception:
+            # Pre-allocation is a performance optimisation only; if it fails (e.g. due to
+            # OOM on XPU where large single-allocation requests may be rejected even when
+            # aggregate free memory is sufficient), silently skip it and let the model
+            # weights fill memory incrementally during loading.
+            pass
 
 
 class AttentionInterface(GeneralInterface):
