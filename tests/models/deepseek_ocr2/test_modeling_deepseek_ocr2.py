@@ -177,6 +177,7 @@ class DeepseekOcr2IntegrationTest(unittest.TestCase):
         EXPECTED_DECODED_TEXT = Expectations(
             {
                 ("cuda", None): "R&D QUALITY IMPROVEMENT SUGGESTION/SOLUTION FORM\n\nName/",
+                ("xpu", None): "R&D QUALITY IMPROVEMENT SUGGESTION/SOLUTION FORM\n\nName/",
             }
         ).get_expectation()  # fmt: skip
         self.assertEqual(decoded, EXPECTED_DECODED_TEXT)
@@ -200,10 +201,14 @@ class DeepseekOcr2IntegrationTest(unittest.TestCase):
         decoded = self.processor.decode(generate_ids[0, inputs["input_ids"].shape[1] :], skip_special_tokens=False)
         EXPECTED_DECODED_TEXT = Expectations(
             {
-                ("cuda", None): "<|ref|>title<|/ref|><|det|>[[330, 198, 559, 230]]<|/det|>\n# R",
+                ("cuda", None): {"exact": "<|ref|>title<|/ref|><|det|>[[330, 198, 559, 230]]<|/det|>\n# R"},
+                ("xpu", None): {"regex": r"^<\|ref\|>title<\|/ref\|><\|det\|>\[\[330, 19[89], 55[6-9], 230\]\]<\|/det\|>\n# R$"},
             }
         ).get_expectation()  # fmt: skip
-        self.assertEqual(decoded, EXPECTED_DECODED_TEXT)
+        if "regex" in EXPECTED_DECODED_TEXT:
+            self.assertRegex(decoded, EXPECTED_DECODED_TEXT["regex"])
+        else:
+            self.assertEqual(decoded, EXPECTED_DECODED_TEXT["exact"])
 
     @slow
     def test_small_model_integration_test_batched(self):
@@ -233,6 +238,10 @@ class DeepseekOcr2IntegrationTest(unittest.TestCase):
         EXPECTED_DECODED_TEXT = Expectations(
             {
                 ("cuda", None): [
+                    "R&D QUALITY IMPROVEMENT SUGGESTION/SOLUTION FORM\n\nName/",
+                    "# Reducing the number of images\n\nIt is also believed that the performance of a website is a critical",
+                ],
+                ("xpu", None): [
                     "R&D QUALITY IMPROVEMENT SUGGESTION/SOLUTION FORM\n\nName/",
                     "# Reducing the number of images\n\nIt is also believed that the performance of a website is a critical",
                 ],

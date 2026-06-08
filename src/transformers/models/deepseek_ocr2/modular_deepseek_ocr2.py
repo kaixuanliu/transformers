@@ -884,6 +884,7 @@ class DeepseekOcr2VisionModel(DeepseekOcr2PreTrainedModel):
         bsz, num_patches, _ = hidden_states.shape
 
         queries = self.query_768_resolution.weight if num_patches <= 144 else self.query_1024_resolution.weight
+        queries = queries.to(hidden_states)
         queries = queries.unsqueeze(0).expand(bsz, -1, -1)
         combined = torch.cat([hidden_states, queries], dim=1)
 
