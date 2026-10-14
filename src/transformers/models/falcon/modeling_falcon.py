@@ -25,7 +25,7 @@ from ... import initialization as init
 from ...activations import get_activation
 from ...cache_utils import Cache, DynamicCache
 from ...generation import GenerationMixin
-from ...masking_utils import create_causal_mask
+from ...masking_utils import create_causal_mask, create_masks_for_generate
 from ...modeling_flash_attention_utils import flash_attn_supports_top_left_mask, is_flash_attn_available
 from ...modeling_layers import GradientCheckpointingLayer
 from ...modeling_outputs import (
@@ -835,6 +835,33 @@ class FalconForCausalLM(FalconPreTrainedModel, GenerationMixin):
 
     def set_output_embeddings(self, new_embeddings: torch.Tensor):
         self.lm_head = new_embeddings
+
+    def create_masks_for_generate(
+        self,
+        config: FalconConfig,
+        inputs_embeds: torch.Tensor,
+        attention_mask: torch.Tensor | None,
+        past_key_values: Cache | None,
+        **kwargs,
+    ) -> torch.Tensor:
+        # Overwritten because the alibi variants need a 2D mask to build the alibi tensor, while the generic function
+        # returns a 4D one. This is only called with a compilable cache, so the mask is padded to the cache max length
+        # and its shape stays static during generation.
+        if not config.alibi:
+            return create_masks_for_generate(
+                config=config,
+                inputs_embeds=inputs_embeds,
+                attention_mask=attention_mask,
+                past_key_values=past_key_values,
+                **kwargs,
+            )
+
+        target_length = past_key_values.get_max_length()
+        if attention_mask is None:
+            return torch.ones(inputs_embeds.shape[0], target_length, dtype=torch.long, device=inputs_embeds.device)
+        if (padding_length := target_length - attention_mask.shape[-1]) > 0:
+            attention_mask = F.pad(attention_mask, (0, padding_length))
+        return attention_mask
 
     @auto_docstring
     def forward(
